@@ -5,6 +5,14 @@ import (
 	"net/http"
 )
 
+// Common http errors
+var (
+	BadRequest          = NewError(http.StatusBadRequest)
+	InternalServerError = NewError(http.StatusInternalServerError)
+	MethodNotAllowed    = NewError(http.StatusMethodNotAllowed)
+	NotAuthorized       = NewError(http.StatusUnauthorized)
+)
+
 // HttpError Error containing status code and error
 type HttpError struct {
 	Status int   `json:"status"`
