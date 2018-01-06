@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// Content type names
 const (
 	JSON       = "application/json"
 	PLAIN_TEXT = "text/plain"

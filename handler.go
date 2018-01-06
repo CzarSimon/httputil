@@ -4,6 +4,8 @@ import (
 	"net/http"
 )
 
+var HealthCheck = NewHandler(healthCheckFunc)
+
 // HandlerFunc Function for dealing with a http request
 type HandlerFunc func(http.ResponseWriter, *http.Request) error
 
@@ -32,4 +34,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// healthCheckFunc Sends an ok status to the requestor to confim health.
+func healthCheckFunc(w http.ResponseWriter, r *http.Request) error {
+	SendOK(w)
+	return nil
 }
