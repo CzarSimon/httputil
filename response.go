@@ -1,13 +1,14 @@
 package httputil
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 )
 
 const (
-	Json      = "application/json"
-	PlainText = "text/plain"
+	JSON       = "application/json"
+	PLAIN_TEXT = "text/plain"
 )
 
 var (
@@ -29,4 +30,17 @@ func Ping(w http.ResponseWriter, r *http.Request) {
 // SendErr Sends an error message and status to the requestor.
 func SendErr(w http.ResponseWriter, err Error) {
 	http.Error(w, err.Error(), err.Status)
+}
+
+// SendJSON Marshals a json body and sends as response.
+func SendJSON(w http.ResponseWriter, v interface{}) error {
+	js, err := json.Marshal(v)
+	if err != nil {
+		log.Println(err)
+		return InternalServerError
+	}
+	w.Header().Set("Content-Type", JSON)
+	w.WriteHeader(http.StatusOK)
+	w.Write(js)
+	return nil
 }
