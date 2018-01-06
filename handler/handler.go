@@ -1,10 +1,12 @@
-package httputil
+package handler
 
 import (
 	"net/http"
+
+	"github.com/CzarSimon/httputil"
 )
 
-var HealthCheck = NewHandler(healthCheckFunc)
+var HealthCheck = New(healthCheckFunc)
 
 // HandlerFunc Function for dealing with a http request
 type HandlerFunc func(http.ResponseWriter, *http.Request) error
@@ -14,8 +16,8 @@ type Handler struct {
 	Handle HandlerFunc
 }
 
-// NewHandler Creates a new Handler struct
-func NewHandler(fn HandlerFunc) Handler {
+// New Creates a new Handler struct
+func New(fn HandlerFunc) Handler {
 	return Handler{
 		Handle: fn,
 	}
@@ -29,8 +31,8 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch e := err.(type) {
-	case Error:
-		SendErr(w, e)
+	case httputil.Error:
+		httputil.SendErr(w, e)
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -38,6 +40,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // healthCheckFunc Sends an ok status to the requestor to confim health.
 func healthCheckFunc(w http.ResponseWriter, r *http.Request) error {
-	SendOK(w)
+	httputil.SendOK(w)
 	return nil
 }
