@@ -13,20 +13,20 @@ var (
 	NotAuthorized       = NewError(http.StatusUnauthorized)
 )
 
-// Error Error containing status code and error
+// Error error containing status code and error.
 type Error struct {
 	Status int   `json:"status"`
 	Err    error `json:"error"`
 }
 
-// Error Retruns a string representation of an Error and
-// makes the type compliant with the go error interface
+// Error retruns a string representation of an Error and
+// makes the type compliant with the go error interface.
 func (err Error) Error() string {
 	return fmt.Sprintf("%d - %s", err.Status, err.Err)
 }
 
-// NewError Creates a new Error based on a supplied status code
-// attempts to derive the error message
+// NewError creates a new Error based on a supplied status code
+// attempts to derive the error message.
 func NewError(status int) Error {
 	return Error{
 		Status: status,
