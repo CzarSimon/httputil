@@ -19,6 +19,7 @@ var (
 // SendOK Sends an OK status to the requestor.
 func SendOK(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", PLAIN_TEXT)
 	w.Write(StatusOK)
 }
 
