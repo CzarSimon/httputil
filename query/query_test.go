@@ -1,12 +1,12 @@
 package query
 
 import (
-	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 func TestParseValue(t *testing.T) {
-	r := getTestReq("http://localhost/test?key=value", t)
+	r := httptest.NewRequest("GET", "http://localhost/test?key=value", nil)
 	val, err := ParseValue(r, "key")
 	expectedValue := "value"
 	if err != nil {
@@ -15,7 +15,7 @@ func TestParseValue(t *testing.T) {
 	if val != expectedValue {
 		t.Errorf("ParseValue returned wrong value. Expected=%s Got=%s", expectedValue, val)
 	}
-	r = getTestReq("http://localhost/test?notKey=value", t)
+	r = httptest.NewRequest("GET", "http://localhost/test?notKey=value", nil)
 	val, err = ParseValue(r, "key")
 	if err == nil {
 		t.Error("No error recived from ParseValue when expected")
@@ -26,7 +26,7 @@ func TestParseValue(t *testing.T) {
 }
 
 func TestParseValues(t *testing.T) {
-	r := getTestReq("http://localhost/test?key=val1&key=val2", t)
+	r := httptest.NewRequest("GET", "http://localhost/test?key=val1&key=val2", nil)
 	values, err := ParseValues(r, "key")
 	expectedValues := []string{"val1", "val2"}
 	if len(values) != len(expectedValues) {
@@ -38,7 +38,7 @@ func TestParseValues(t *testing.T) {
 				expectedValue, values[i])
 		}
 	}
-	r = getTestReq("http://localhost/test?notKey=val1&notKey=val2", t)
+	r = httptest.NewRequest("GET", "http://localhost/test?notKey=val1&notKey=val2", nil)
 	values, err = ParseValues(r, "key")
 	if err == nil {
 		t.Error("No error recived from ParseValues when expected")
@@ -46,12 +46,4 @@ func TestParseValues(t *testing.T) {
 	if len(values) != 0 {
 		t.Errorf("ParseValue returned values. Exprected=[] Got=%v", values)
 	}
-}
-
-func getTestReq(URL string, t *testing.T) *http.Request {
-	r, err := http.NewRequest("GET", URL, nil)
-	if err != nil {
-		t.Fatalf("Error in request creation: %s", err)
-	}
-	return r
 }
