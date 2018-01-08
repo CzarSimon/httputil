@@ -22,9 +22,6 @@ func NewWrapper(auth Test) Wrapper {
 	}
 }
 
-// handler Function for dealing with http request / responses.
-type handler func(http.ResponseWriter, *http.Request)
-
 // Wrap Converts a supplied handler to an AuthHandler
 func (wr Wrapper) Wrap(h http.Handler) http.Handler {
 	return AuthHandler{
@@ -45,14 +42,14 @@ func (auth AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // WrapFunc Wraps a authentication test around a hander function.
-func (wr Wrapper) WrapFunc(fn handler) handler {
+func (wr Wrapper) WrapFunc(f http.HandlerFunc) handler {
 	return func(w http.ResponseWriter, r *http.Request) {
-		TestAuth(wr.auth, fn, w, r)
+		TestAuth(wr.auth, f, w, r)
 	}
 }
 
 // TestAuth Executes authentication test and handles result.
-func TestAuth(test Test, fn handler, w http.ResponseWriter, r *http.Request) {
+func TestAuth(test Test, f http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	if !test(r) {
 		LogStatus("Auth failed", r)
 		httputil.SendErr(w, httputil.NotAuthorized)
