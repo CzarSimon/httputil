@@ -42,7 +42,7 @@ func (auth AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // WrapFunc Wraps a authentication test around a hander function.
-func (wr Wrapper) WrapFunc(f http.HandlerFunc) handler {
+func (wr Wrapper) WrapFunc(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		TestAuth(wr.auth, f, w, r)
 	}
@@ -56,7 +56,7 @@ func TestAuth(test Test, f http.HandlerFunc, w http.ResponseWriter, r *http.Requ
 		return
 	}
 	LogStatus("Auth success", r)
-	fn(w, r)
+	f(w, r)
 }
 
 // LogStatus Logs outcome of authorization challange.
