@@ -46,3 +46,10 @@ func SendJSON(w http.ResponseWriter, v interface{}) error {
 	w.Write(js)
 	return nil
 }
+
+// SendString sends a plain text message.
+func SendString(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", PLAIN_TEXT)
+	w.Write([]byte(message))
+}

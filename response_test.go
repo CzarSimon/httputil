@@ -25,6 +25,22 @@ func TestSendOK(t *testing.T) {
 	}
 }
 
+func TestSendString(t *testing.T) {
+	w := httptest.NewRecorder()
+	SendString(w, "foo bar")
+	if w.Code != http.StatusOK {
+		t.Errorf("SendOK: Wrong status code. Expected=%d Got=%s", http.StatusOK, w.Code)
+	}
+	resp := w.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("SendOK: Unexpected error. Got=[%s]", err)
+	}
+	if string(body) != "foo bar" {
+		t.Errorf("SendOK: Wrong body. Expeceted=[foo bar] Got=[%s]", string(body))
+	}
+}
+
 func TestPing(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "http://example.com/ping", nil)
