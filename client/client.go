@@ -11,10 +11,14 @@ import (
 
 	"github.com/CzarSimon/httputil/client/rpc"
 	"github.com/CzarSimon/httputil/jwt"
+	"github.com/CzarSimon/httputil/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetDefaultLogger("httputil/client")
 
 // Prometheus metrics.
 var (
@@ -111,7 +115,7 @@ func (c *Client) addToken(req *http.Request) {
 		Roles: []string{c.Role},
 	}, 24*time.Hour)
 	if err != nil {
-		//
+		log.Warn("failed to create auth token", zap.Error(err))
 	}
 
 	req.Header.Add("Authorization", "Bearer "+token)
