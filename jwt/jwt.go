@@ -11,7 +11,7 @@ import (
 	josejwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
-var log = logger.MustGetLogger("go24/jwt", zap.InfoLevel)
+var log = logger.MustGetLogger("httputil/jwt", zap.InfoLevel)
 
 const roleDelimiter = ";"
 

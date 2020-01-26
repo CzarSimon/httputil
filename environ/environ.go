@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = logger.MustGetLogger("go24/env", zap.InfoLevel)
+var log = logger.MustGetLogger("httputil/environ", zap.InfoLevel)
 
 // Get gets environment variable with default value.
 func Get(key, defaultValue string) string {
