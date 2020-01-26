@@ -34,8 +34,7 @@ func TestParseValues(t *testing.T) {
 	}
 	for i, expectedValue := range expectedValues {
 		if values[i] != expectedValue {
-			t.Errorf("%d - ParseValues returned wrong value. Expected=%s Got=%s",
-				expectedValue, values[i])
+			t.Errorf("%d - ParseValues returned wrong value. Expected=%s Got=%s", i, expectedValue, values[i])
 		}
 	}
 	r = httptest.NewRequest("GET", "http://localhost/test?notKey=val1&notKey=val2", nil)
