@@ -11,10 +11,11 @@ import (
 type HealthFunc func() error
 
 // NewRouter creates a default router.
-func NewRouter(healthCheck HealthFunc) *gin.Engine {
+func NewRouter(appName string, healthCheck HealthFunc) *gin.Engine {
 	r := gin.New()
 	r.Use(
 		gin.Recovery(),
+		Trace(appName),
 		Metrics(),
 		Logger(),
 		HandleErrors())

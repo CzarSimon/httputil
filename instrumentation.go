@@ -7,6 +7,8 @@ import (
 
 	"github.com/CzarSimon/httputil/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -60,6 +62,28 @@ func Metrics() gin.HandlerFunc {
 		latency := stop()
 		requestsTotal.WithLabelValues(endpoint, method, status).Inc()
 		requestsLatency.WithLabelValues(endpoint, method, status).Observe(latency)
+	}
+}
+
+// Trace captures open tracing span and attaches it to the request context.
+func Trace(app string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		wireContext, err := opentracing.GlobalTracer().Extract(
+			opentracing.HTTPHeaders,
+			opentracing.HTTPHeadersCarrier(c.Request.Header))
+		if err != nil {
+			errLog.Warn("failed to extract wireContext from request", zap.Error(err))
+		}
+
+		span := opentracing.StartSpan(app, ext.RPCServerOption(wireContext))
+		ext.HTTPMethod.Set(span, c.Request.Method)
+		ext.HTTPUrl.Set(span, c.Request.URL.String())
+
+		c.Request = c.Request.WithContext(opentracing.ContextWithSpan(c.Request.Context(), span))
+		c.Next()
+
+		ext.HTTPStatusCode.Set(span, uint16(c.Writer.Status()))
+		span.Finish()
 	}
 }
 
