@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -39,6 +40,10 @@ type Credentials struct {
 type User struct {
 	ID    string
 	Roles []string
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("User(id=%s, roles=%v)", u.ID, u.Roles)
 }
 
 // IsSystem checks if a user has the SYSTEM role.
