@@ -7,6 +7,8 @@ import (
 	"github.com/CzarSimon/httputil/id"
 	"github.com/CzarSimon/httputil/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"go.uber.org/zap"
 )
 
@@ -69,10 +71,14 @@ func getFirstError(c *gin.Context) *Error {
 }
 
 func logError(c *gin.Context, err *Error) {
+	span := opentracing.SpanFromContext(c.Request.Context())
+	if span != nil {
+		ext.HTTPStatusCode.Set(span, uint16(err.Status))
+	}
+
 	if err.Status < 500 {
 		return
 	}
-
 	errLog.Error(err.Message,
 		zap.Int("status", err.Status),
 		zap.String("errorId", err.ID),
