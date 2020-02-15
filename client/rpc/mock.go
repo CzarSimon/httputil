@@ -14,14 +14,17 @@ import (
 
 // MockResponse mocked rpc response.
 type MockResponse struct {
-	body interface{}
-	err  error
+	Body interface{}
+	Err  error
 }
+
+// MockResponses is a MockResponse map
+type MockResponses map[string]MockResponse
 
 // MockClient mock implementation of a client.
 type MockClient struct {
 	Client
-	Responses map[string]MockResponse
+	Responses MockResponses
 }
 
 // Do perform a mocked request.
@@ -34,14 +37,14 @@ func (c *MockClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, httputil.NotFoundError(err)
 	}
 
-	if mockRes.err != nil {
-		return nil, mockRes.err
+	if mockRes.Err != nil {
+		return nil, mockRes.Err
 	}
 
 	var body io.ReadCloser
 	headers := http.Header{}
-	if mockRes.body != nil {
-		bytesBody, err := json.Marshal(mockRes.body)
+	if mockRes.Body != nil {
+		bytesBody, err := json.Marshal(mockRes.Body)
 		if err != nil {
 			return nil, err
 		}
