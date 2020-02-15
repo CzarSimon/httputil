@@ -138,13 +138,11 @@ func createBody(body interface{}) (io.Reader, error) {
 	}
 
 	var bodyReader io.Reader
-	if body != nil {
-		bytesBody, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
-		}
-		bodyReader = bytes.NewBuffer(bytesBody)
+	bytesBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
 	}
+	bodyReader = bytes.NewBuffer(bytesBody)
 
 	return bodyReader, nil
 }
