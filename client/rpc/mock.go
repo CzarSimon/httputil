@@ -27,7 +27,7 @@ type MockClient struct {
 	Responses MockResponses
 }
 
-// Do perform a mocked request.
+// Do perform a mked request.
 func (c *MockClient) Do(req *http.Request) (*http.Response, error) {
 	time.Sleep(10 * time.Millisecond)
 	key := fmt.Sprintf("%s:%s", req.Method, req.URL)
