@@ -12,6 +12,21 @@ import (
 	tracelog "github.com/opentracing/opentracing-go/log"
 )
 
+const (
+	userKey = "X-JWT-User"
+)
+
+// GetPrincipal returns the authenticated user if exists.
+func GetPrincipal(c *gin.Context) (jwt.User, bool) {
+	val, ok := c.Get(userKey)
+	if !ok {
+		return jwt.User{}, false
+	}
+
+	user, ok := val.(jwt.User)
+	return user, ok
+}
+
 // RBAC adds role based access controll checks extracting roles from jwt.
 type RBAC struct {
 	Verifier jwt.Verifier
@@ -36,7 +51,9 @@ func (r *RBAC) Secure(roles ...string) gin.HandlerFunc {
 		span := opentracing.SpanFromContext(c.Request.Context())
 		if span != nil {
 			span.SetBaggageItem("user-id", user.ID)
+			span.SetBaggageItem("user-roles", strings.Join(user.Roles, ";"))
 		}
+		c.Set(userKey, user)
 
 		for _, role := range validRoles {
 			if user.HasRole(role) {
