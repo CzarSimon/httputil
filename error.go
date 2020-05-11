@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	tracelog "github.com/opentracing/opentracing-go/log"
 	"go.uber.org/zap"
 )
 
@@ -73,10 +74,15 @@ func getFirstError(c *gin.Context) *Error {
 func logError(c *gin.Context, err *Error) {
 	span := opentracing.SpanFromContext(c.Request.Context())
 	if span != nil {
+		span.LogFields(tracelog.Error(err))
 		ext.HTTPStatusCode.Set(span, uint16(err.Status))
 	}
 
 	if err.Status < 500 {
+		errLog.Info(err.Message,
+			zap.Int("status", err.Status),
+			zap.String("errorId", err.ID),
+			zap.Error(err.Err))
 		return
 	}
 	errLog.Error(err.Message,
@@ -113,6 +119,11 @@ func MethodNotAllowedError(err error) *Error {
 // ConflictError creates a 409 - Conflict error.
 func ConflictError(err error) *Error {
 	return errorFromStatus(http.StatusConflict, err)
+}
+
+// UnsupportedMediaTypeError creates a 415 - Unsupported Media Type error.
+func UnsupportedMediaTypeError(err error) *Error {
+	return errorFromStatus(http.StatusUnsupportedMediaType, err)
 }
 
 // PreconditionRequiredError creates a 428 - Precondition Required error.

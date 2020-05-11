@@ -72,7 +72,7 @@ func Trace(app string) gin.HandlerFunc {
 			opentracing.HTTPHeaders,
 			opentracing.HTTPHeadersCarrier(c.Request.Header))
 		if err != nil {
-			errLog.Warn("failed to extract wireContext from request", zap.Error(err))
+			errLog.Debug("failed to extract wireContext from request", zap.Error(err))
 		}
 
 		span := opentracing.StartSpan(app, ext.RPCServerOption(wireContext))

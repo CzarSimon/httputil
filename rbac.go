@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/CzarSimon/httputil/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	tracelog "github.com/opentracing/opentracing-go/log"
 )
 
 const (
@@ -32,6 +31,13 @@ type RBAC struct {
 	Verifier jwt.Verifier
 }
 
+// NewRBAC creates a new RBAC struct with sane defaults.
+func NewRBAC(creds jwt.Credentials) RBAC {
+	return RBAC{
+		Verifier: jwt.NewVerifier(creds, time.Minute),
+	}
+}
+
 // Secure checks if a request was made with a jwt containing a specified list of roles.
 func (r *RBAC) Secure(roles ...string) gin.HandlerFunc {
 	validRoles := make([]string, 0)
@@ -44,6 +50,7 @@ func (r *RBAC) Secure(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := extractUserFromRequest(c, r.Verifier)
 		if err != nil {
+			logError(c, err)
 			c.AbortWithStatusJSON(err.Status, err)
 			return
 		}
@@ -64,11 +71,7 @@ func (r *RBAC) Secure(roles ...string) gin.HandlerFunc {
 
 		msg := fmt.Sprintf("%s %s access denied for %s", c.Request.Method, c.Request.URL.Path, user)
 		err = ForbiddenError(errors.New(msg))
-		if span != nil {
-			span.LogFields(tracelog.Error(err))
-			ext.HTTPStatusCode.Set(span, uint16(err.Status))
-		}
-
+		logError(c, err)
 		c.AbortWithStatusJSON(err.Status, err)
 	}
 }

@@ -50,6 +50,31 @@ func ParseQueryValues(c *gin.Context, key string) ([]string, error) {
 	return values, nil
 }
 
+// AllowContentType whitelists a given list of content types.
+func AllowContentType(types ...string) gin.HandlerFunc {
+	allowedTypes := make(map[string]bool)
+	for _, t := range types {
+		allowedTypes[t] = true
+	}
+
+	return func(c *gin.Context) {
+		ct := c.ContentType()
+		if _, ok := allowedTypes[ct]; ok {
+			c.Next()
+			return
+		}
+
+		err := UnsupportedMediaTypeError(fmt.Errorf("unsupported content-type: %s", ct))
+		logError(c, err)
+		c.AbortWithStatusJSON(err.Status, err)
+	}
+}
+
+// AllowJSON only allowes request with content type json.
+func AllowJSON() gin.HandlerFunc {
+	return AllowContentType(gin.MIMEJSON)
+}
+
 func checkHealth(check HealthFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := check()

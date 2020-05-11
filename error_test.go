@@ -49,6 +49,12 @@ func TestNewError(t *testing.T) {
 	assert.Error(err)
 	assert.True(errors.Is(err, baseErr))
 
+	err = httputil.UnsupportedMediaTypeError(baseErr)
+	assert.Equal(415, err.Status)
+	assert.Equal("Unsupported Media Type", err.Message)
+	assert.Error(err)
+	assert.True(errors.Is(err, baseErr))
+
 	err = httputil.PreconditionRequiredError(baseErr)
 	assert.Equal(428, err.Status)
 	assert.Equal("Precondition Required", err.Message)
