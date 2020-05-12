@@ -12,13 +12,20 @@ type HealthFunc func() error
 
 // NewRouter creates a default router.
 func NewRouter(appName string, healthCheck HealthFunc) *gin.Engine {
-	r := gin.New()
-	r.Use(
+	return NewCustomRouter(
+		healthCheck,
 		gin.Recovery(),
 		Trace(appName),
 		Metrics(),
 		Logger(),
-		HandleErrors())
+		HandleErrors(),
+	)
+}
+
+// NewCustomRouter creates a new router with a custom list of base middlewares.
+func NewCustomRouter(healthCheck HealthFunc, middlewares ...gin.HandlerFunc) *gin.Engine {
+	r := gin.New()
+	r.Use(middlewares...)
 
 	r.GET("/health", checkHealth(healthCheck))
 	r.GET(metricsPath, prometheusHandler())
