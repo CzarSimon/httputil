@@ -68,12 +68,10 @@ func Metrics() gin.HandlerFunc {
 // Trace captures open tracing span and attaches it to the request context.
 func Trace(app string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		wireContext, err := opentracing.GlobalTracer().Extract(
+		wireContext, _ := opentracing.GlobalTracer().Extract(
 			opentracing.HTTPHeaders,
-			opentracing.HTTPHeadersCarrier(c.Request.Header))
-		if err != nil {
-			errLog.Debug("failed to extract wireContext from request", zap.Error(err))
-		}
+			opentracing.HTTPHeadersCarrier(c.Request.Header),
+		)
 
 		span := opentracing.StartSpan(app, ext.RPCServerOption(wireContext))
 		ext.HTTPMethod.Set(span, c.Request.Method)
