@@ -34,6 +34,25 @@ func TestHealth(t *testing.T) {
 	assert.Equal(http.StatusServiceUnavailable, res.Code)
 }
 
+func TestRequestID(t *testing.T) {
+	assert := assert.New(t)
+	r := httputil.NewRouter("httputil-test", func() error {
+		return nil
+	})
+	r.GET("/test", httputil.SendOK)
+
+	req := createTestRequest("/test", http.MethodGet, "", nil)
+	req.Header.Set("X-Request-ID", "some-unique-id")
+	res := performTestRequest(r, req)
+	assert.Equal(http.StatusOK, res.Code)
+	assert.Equal("some-unique-id", res.HeaderMap.Get("X-Request-ID"))
+
+	req = createTestRequest("/test", http.MethodGet, "", nil)
+	res = performTestRequest(r, req)
+	assert.Equal(http.StatusOK, res.Code)
+	assert.Len(res.HeaderMap.Get("X-Request-ID"), 36)
+}
+
 func TestAllowContentType(t *testing.T) {
 	assert := assert.New(t)
 	r := httputil.NewRouter("httputil-test", func() error {

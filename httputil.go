@@ -15,7 +15,8 @@ func NewRouter(appName string, healthCheck HealthFunc) *gin.Engine {
 	return NewCustomRouter(
 		healthCheck,
 		gin.Recovery(),
-		Trace(appName),
+		RequestID(RequestIDHeader),
+		Trace(appName, RequestIDHeader, ClientIDHeader, SessionIDHeader),
 		Metrics(),
 		Logger(),
 		HandleErrors(),

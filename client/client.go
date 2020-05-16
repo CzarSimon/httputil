@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CzarSimon/httputil"
 	"github.com/CzarSimon/httputil/client/rpc"
 	"github.com/CzarSimon/httputil/jwt"
 	"github.com/CzarSimon/httputil/logger"
@@ -124,10 +125,16 @@ func (c *Client) addToken(req *http.Request) {
 func injectSpan(ctx context.Context, req *http.Request) {
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
+		reqID := span.BaggageItem(httputil.RequestIDHeader)
+		if reqID != "" {
+			req.Header.Set(httputil.RequestIDHeader, reqID)
+		}
+
 		opentracing.GlobalTracer().Inject(
 			span.Context(),
 			opentracing.HTTPHeaders,
-			opentracing.HTTPHeadersCarrier(req.Header))
+			opentracing.HTTPHeadersCarrier(req.Header),
+		)
 	}
 }
 
