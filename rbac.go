@@ -26,6 +26,17 @@ func GetPrincipal(c *gin.Context) (jwt.User, bool) {
 	return user, ok
 }
 
+// MustGetPrincipal returns the authenticated user or an error if none exists.
+func MustGetPrincipal(c *gin.Context) (jwt.User, error) {
+	principal, ok := GetPrincipal(c)
+	if !ok {
+		err := fmt.Errorf("failed to parse prinipal from authenticated request")
+		return jwt.User{}, InternalServerError(err)
+	}
+
+	return principal, nil
+}
+
 // RBAC adds role based access controll checks extracting roles from jwt.
 type RBAC struct {
 	Verifier jwt.Verifier

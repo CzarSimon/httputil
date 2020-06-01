@@ -95,7 +95,8 @@ func Trace(app string, headers ...string) gin.HandlerFunc {
 			opentracing.HTTPHeadersCarrier(c.Request.Header),
 		)
 
-		span := opentracing.StartSpan(app, ext.RPCServerOption(wireContext))
+		spanName := fmt.Sprintf("%s - %s %s", app, c.Request.Method, c.Request.URL.Path)
+		span := opentracing.StartSpan(spanName, ext.RPCServerOption(wireContext))
 		ext.HTTPMethod.Set(span, c.Request.Method)
 		ext.HTTPUrl.Set(span, c.Request.URL.String())
 
