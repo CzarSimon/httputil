@@ -32,8 +32,9 @@ var (
 	)
 	rpcLatency = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "rpc_request_latency_ms",
-			Help: "Remote procedure call duration in milliseconds",
+			Name:    "rpc_request_latency_ms",
+			Help:    "Remote procedure call duration in milliseconds",
+			Buckets: []float64{1, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000},
 		},
 		[]string{"endpoint", "method", "status"},
 	)
