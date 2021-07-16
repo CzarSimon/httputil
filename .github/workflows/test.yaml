@@ -4,9 +4,11 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
     strategy:
       matrix:
-        goVersion: [1.14, 1.15, 1.16]
+        goVersion: [1.16]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
@@ -18,9 +20,9 @@ jobs:
       - name: Get dependencies
         run: go mod download
       - name: Run security scan
-        run: |
-          curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
-          $(which gosec) ./...
+        uses: securego/gosec@master
+        with:
+          args: ./...
       - name: Check code style
         run: go vet ./...
       - name: Test
