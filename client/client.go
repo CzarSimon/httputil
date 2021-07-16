@@ -131,11 +131,15 @@ func injectSpan(ctx context.Context, req *http.Request) {
 			req.Header.Set(httputil.RequestIDHeader, reqID)
 		}
 
-		opentracing.GlobalTracer().Inject(
+		err := opentracing.GlobalTracer().Inject(
 			span.Context(),
 			opentracing.HTTPHeaders,
 			opentracing.HTTPHeadersCarrier(req.Header),
 		)
+
+		if err != nil {
+			log.Warn("failed to inject span context into client http request", zap.Error(err))
+		}
 	}
 }
 
