@@ -19,7 +19,7 @@ jobs:
         run: go mod download
       - name: Run security scan
         run: |
-          go get -u github.com/securego/gosec/v2/cmd/gosec
+          curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
           gosec ./...
       - name: Check code style
         run: go vet ./...
