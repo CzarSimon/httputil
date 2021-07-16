@@ -17,10 +17,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Get dependencies
         run: go mod download
-      - name: Run Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: ./...
+      - name: Run security scan
+        run: |
+          go get -u github.com/securego/gosec/v2/cmd/gosec
+          gosec ./...
       - name: Check code style
         run: go vet ./...
       - name: Test
