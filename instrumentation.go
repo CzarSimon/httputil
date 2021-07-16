@@ -2,6 +2,7 @@ package httputil
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -14,10 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-)
-
-const (
-	metricsPath = "/metrics"
 )
 
 //  Common tracing headers
@@ -123,23 +120,44 @@ func setBaggageIfMissing(span opentracing.Span, key, val string) {
 }
 
 // Logger request logging middleware.
-func Logger() gin.HandlerFunc {
+// Accepts a list of paths to skip logging incomming requests and non 500 outgoing requests to.
+func Logger(skip ...string) gin.HandlerFunc {
+	skipPaths := make(map[string]bool)
+	for _, path := range skip {
+		skipPaths[path] = true
+	}
+
 	return func(c *gin.Context) {
 		stop := createTimer()
 		path := c.Request.URL.Path
 		reqID := c.GetHeader(RequestIDHeader)
-		requestLog.Info(
-			fmt.Sprintf("Incomming request: %s %s", c.Request.Method, path),
-			zap.String("requestId", reqID),
-		)
+		_, skippablePath := skipPaths[path]
+
+		if !skippablePath {
+			requestLog.Info(
+				fmt.Sprintf("Incomming request: %s %s", c.Request.Method, path),
+				zap.String("requestId", reqID),
+			)
+		}
 
 		c.Next()
 
 		latency := stop()
-		requestLog.Info(
+		status := c.Writer.Status()
+
+		if skippablePath && status < http.StatusInternalServerError {
+			return
+		}
+
+		logFn := requestLog.Info
+		if status >= http.StatusInternalServerError {
+			logFn = requestLog.Error
+		}
+
+		logFn(
 			fmt.Sprintf("Outgoing request: %s %s", c.Request.Method, path),
 			zap.String("requestId", reqID),
-			zap.Int("status", c.Writer.Status()),
+			zap.Int("status", status),
 			zap.Float64("latency", latency),
 		)
 	}

@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	healthPath  = "/health"
+	metricsPath = "/metrics"
+)
+
 // HealthFunc health check function signature.
 type HealthFunc func() error
 
@@ -18,7 +23,7 @@ func NewRouter(appName string, healthCheck HealthFunc) *gin.Engine {
 		RequestID(RequestIDHeader),
 		Trace(appName, RequestIDHeader, ClientIDHeader, SessionIDHeader),
 		Metrics(),
-		Logger(),
+		Logger(healthPath, metricsPath),
 		HandleErrors(),
 	)
 }
@@ -28,7 +33,7 @@ func NewCustomRouter(healthCheck HealthFunc, middlewares ...gin.HandlerFunc) *gi
 	r := gin.New()
 	r.Use(middlewares...)
 
-	r.GET("/health", checkHealth(healthCheck))
+	r.GET(healthPath, checkHealth(healthCheck))
 	r.GET(metricsPath, prometheusHandler())
 	return r
 }
