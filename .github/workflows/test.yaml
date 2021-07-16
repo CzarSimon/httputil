@@ -4,15 +4,24 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goVersion: [1.14, 1.15, 1.16]
     steps:
-    - name: Set up Go 1.13
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13
-      id: go
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Get dependencies
-      run: go mod download
-    - name: Test
-      run: go test ./...
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.goVersion }}
+        id: go
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get dependencies
+        run: go mod download
+      - name: Run Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
+      - name: Check code style
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
