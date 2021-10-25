@@ -5,13 +5,27 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 )
+
+// AES256KeySize key size for AES-256
+const AES256KeySize = 32
 
 // Common encryption / decryption errors.
 var (
 	ErrToShortCiphertext = errors.New("ciphertext too short")
 )
+
+// GenerateAESKey generates a random AES-256 key.
+func GenerateAESKey() ([]byte, error) {
+	key, err := RandomBytes(AES256KeySize)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate AES key: %w", err)
+	}
+
+	return key, nil
+}
 
 // Cipher symetric chipher interface.
 type Cipher interface {
