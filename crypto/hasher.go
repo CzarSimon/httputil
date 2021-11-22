@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -24,6 +25,58 @@ var (
 type Hasher interface {
 	Hash(plaintext, salt []byte) ([]byte, error)
 	Verify(plaintext, salt, hashtext []byte) error
+}
+
+// Argon2Hasher hasher implementation using the Argon2id key derivation function.
+type Argon2Hasher struct {
+	key argon2Key
+}
+
+// NewArgon2Hasher creates a new Argon2id hasher
+func NewArgon2Hasher(time, memory, keyLen uint32, threads uint8) Hasher {
+	return &Argon2Hasher{
+		key: argon2Key{
+			time:    time,
+			memory:  memory,
+			threads: threads,
+			keyLen:  keyLen,
+		},
+	}
+}
+
+func DefaultArgon2Hasher() Hasher {
+	return NewArgon2Hasher(1, 64*1024, 32, 4)
+}
+
+// Hash derives a key using Argon2id.
+func (h *Argon2Hasher) Hash(plaintext, salt []byte) ([]byte, error) {
+	key := h.deriveKey(plaintext, salt, h.key)
+	return []byte(key.String()), nil
+}
+
+// Verify verifies that the plaintext and salt hash to the given hashtext.
+func (h *Argon2Hasher) Verify(plaintext, salt, hashtext []byte) error {
+	key, err := parseArgon2Key(hashtext)
+	if err != nil {
+		return err
+	}
+
+	dk := h.deriveKey(plaintext, salt, key)
+	if !bytes.Equal(key.hash, dk.hash) {
+		return ErrHashMissmatch
+	}
+
+	return nil
+}
+
+func (h *Argon2Hasher) deriveKey(plaintext, salt []byte, key argon2Key) argon2Key {
+	return argon2Key{
+		time:    key.time,
+		memory:  key.memory,
+		threads: key.threads,
+		keyLen:  key.keyLen,
+		hash:    argon2.IDKey(plaintext, salt, key.time, key.memory, key.threads, key.keyLen),
+	}
 }
 
 // ScryptHasher hasher implementation using the SCRYPT key derivation function.
@@ -48,7 +101,6 @@ func DefaultScryptHasher() Hasher {
 	return NewScryptHasher(16384, 8, 1, 32)
 }
 
-// Hash derives a key using Scrypt.
 func (h *ScryptHasher) Hash(plaintext, salt []byte) ([]byte, error) {
 	key, err := h.deriveKey(plaintext, salt, h.key)
 	if err != nil {
@@ -213,4 +265,65 @@ func parseN(str string) (int, error) {
 	}
 
 	return N, nil
+}
+
+type argon2Key struct {
+	time    uint32
+	memory  uint32
+	threads uint8
+	keyLen  uint32
+	hash    []byte
+}
+
+func (k argon2Key) String() string {
+	hash := hex.EncodeToString(k.hash)
+	return fmt.Sprintf("ARGON2ID$%d$%d$%d$%d$%s", k.time, k.memory, k.threads, k.keyLen, hash)
+}
+
+func parseArgon2Key(b []byte) (argon2Key, error) {
+	var key argon2Key
+	c := strings.Split(string(b), "$")
+	if len(c) != 6 {
+		return key, fmt.Errorf("%w: unexpected number of components", ErrInvalidKey)
+	}
+
+	if c[0] != "ARGON2ID" {
+		return key, fmt.Errorf("%w: not a ARGON2ID key", ErrInvalidKey)
+	}
+
+	timeVal, err := strconv.ParseUint(c[1], 10, 32)
+	if err != nil {
+		return key, fmt.Errorf("%w: invalid time value, %v", ErrInvalidKey, err)
+	}
+
+	memory, err := strconv.ParseUint(c[2], 10, 32)
+	if err != nil {
+		return key, fmt.Errorf("%w: invalid memory value, %v", ErrInvalidKey, err)
+	}
+
+	threads, err := strconv.ParseUint(c[3], 10, 8)
+	if err != nil {
+		return key, fmt.Errorf("%w: invalid threads value, %v", ErrInvalidKey, err)
+	}
+
+	keyLen, err := strconv.ParseUint(c[4], 10, 32)
+	if err != nil {
+		return key, fmt.Errorf("%w: invalid keyLen value, %v", ErrInvalidKey, err)
+	}
+
+	hash, err := hex.DecodeString(c[5])
+	if err != nil {
+		return key, fmt.Errorf("%w: invalid hash, %v", ErrInvalidKey, err)
+	}
+	if int(keyLen) != len(hash) {
+		return key, fmt.Errorf("%w: invalid hash, does not match key length", ErrInvalidKey)
+	}
+
+	key.time = uint32(timeVal)
+	key.memory = uint32(memory)
+	key.threads = uint8(threads)
+	key.keyLen = uint32(keyLen)
+	key.hash = hash
+
+	return key, nil
 }
